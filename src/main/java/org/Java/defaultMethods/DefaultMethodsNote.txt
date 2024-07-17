@@ -1,0 +1,186 @@
+References:
+
+https://www.digitalocean.com/community/tutorials/java-8-interface-changes-static-method-default-method
+https://www.baeldung.com/java-static-default-methods
+https://javagoal.com/default-method-in-interface/
+
+
+
+
+Default Methods:
+
+1. Why Interfaces Need Default Methods?
+    Like regular interface methods, default methods are implicitly public; there’s no need to specify the public modifier.
+
+    Unlike regular interface methods, we declare them with the default keyword at the beginning of the method signature, and they provide an implementation.
+
+    public interface MyInterface {
+
+        // regular interface methods
+
+        default void defaultMethod() {
+            // default method implementation
+        }
+}
+
+    public interface Vehicle {
+
+     String getBrand();
+
+     String speedUp();
+
+     String slowDown();
+
+     default String turnAlarmOn() {
+         return "Turning the vehicle alarm on.";
+     }
+
+     default String turnAlarmOff() {
+         return "Turning the vehicle alarm off.";
+     }
+ }
+In a typical design based on abstractions, where an interface has one or multiple implementations, if one or more methods are added to the interface, all the implementations will be forced to implement them too. Otherwise, the design will just break down.
+
+Default interface methods are an efficient way to deal with this issue. They allow us to add new methods to an interface that are automatically available in the implementations. Therefore, we don’t need to modify the implementing classes.
+
+In this way, backward compatibility is neatly preserved without having to refactor the implementers.
+
+Now let’s write the implementing class:
+
+public class Car implements Vehicle {
+
+    private String brand;
+
+    // constructors/getters
+
+    @Override
+    public String getBrand() {
+        return brand;
+    }
+
+    @Override
+    public String speedUp() {
+        return "The car is speeding up.";
+    }
+
+    @Override
+    public String slowDown() {
+        return "The car is slowing down.";
+    }
+}
+Copy
+Finally, let’s define a typical main class, which creates an instance of Car and calls its methods:
+
+public static void main(String[] args) {
+    Vehicle car = new Car("BMW");
+    System.out.println(car.getBrand());
+    System.out.println(car.speedUp());
+    System.out.println(car.slowDown());
+    System.out.println(car.turnAlarmOn());
+    System.out.println(car.turnAlarmOff());
+}
+Copy
+Please notice how the default methods, turnAlarmOn() and turnAlarmOff(),
+ from our Vehicle interface are automatically available in the Car class.
+
+
+ The most common use of interface default methods is to incrementally provide additional functionality to a given type without breaking down the implementing classes.
+
+ In addition, we can use them to provide additional functionality around an existing abstract method:
+
+ public interface Vehicle {
+
+     // additional interface methods
+
+     double getSpeed();
+
+     default double getSpeedInKMH(double speed) {
+        // conversion
+     }
+ }
+
+
+ ....................................................................................
+
+ Multiple Interface Inheritance Rules
+ Default interface methods are a pretty nice feature, but there are some caveats worth mentioning. Since Java allows classes to implement multiple interfaces, it’s important to know what happens when a class implements several interfaces that define the same default methods.
+
+ To better understand this scenario, let’s define a new Alarm interface and refactor the Car class:
+
+ public interface Alarm {
+
+     default String turnAlarmOn() {
+         return "Turning the alarm on.";
+     }
+
+     default String turnAlarmOff() {
+         return "Turning the alarm off.";
+     }
+ }
+ Copy
+ With this new interface defining its own set of default methods, the Car class would implement both Vehicle and Alarm:
+
+ public class Car implements Vehicle, Alarm {
+     // ...
+ }
+ Copy
+ In this case, the code simply won’t compile, as there’s a conflict caused by multiple interface inheritance (a.k.a the Diamond Problem). The Car class would inherit both sets of default methods. So which ones should we call?
+
+
+To solve this ambiguity, we must explicitly provide an implementation for the methods:
+
+@Override
+public String turnAlarmOn() {
+    // custom implementation
+}
+
+@Override
+public String turnAlarmOff() {
+    // custom implementation
+}
+Copy
+We can also have our class use the default methods of one of the interfaces.
+
+Let’s see an example that uses the default methods from the Vehicle interface:
+
+@Override
+public String turnAlarmOn() {
+    return Vehicle.super.turnAlarmOn();
+}
+
+@Override
+public String turnAlarmOff() {
+    return Vehicle.super.turnAlarmOff();
+}
+Copy
+Similarly, we can have the class use the default methods defined within the Alarm interface:
+
+@Override
+public String turnAlarmOn() {
+    return Alarm.super.turnAlarmOn();
+}
+
+@Override
+public String turnAlarmOff() {
+    return Alarm.super.turnAlarmOff();
+}
+Copy
+It’s even possible to make the Car class use both sets of default methods:
+
+@Override
+public String turnAlarmOn() {
+    return Vehicle.super.turnAlarmOn() + " " + Alarm.super.turnAlarmOn();
+}
+
+@Override
+public String turnAlarmOff() {
+    return Vehicle.super.turnAlarmOff() + " " + Alarm.super.turnAlarmOff();
+}
+
+
+
+Important points:
+
+The default methods help to extend the functionality of interfaces without breaking the implementation of existing classes.
+By the use of default methods in interfaces, the Collections API was enhanced in Java 8 to support lambda expressions.
+
